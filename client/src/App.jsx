@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { MdDelete } from "react-icons/md";
-import { FaRegEdit } from "react-icons/fa";
+import { FaEdit } from "react-icons/fa";
 import { backendURL } from "./constant";
 
 function App() {
@@ -15,42 +15,67 @@ function App() {
     });
     const [isModalVisible, setModalVisible] = useState(false);
     const [selectedStudentId, setSelectedStudentId] = useState(null);
+    const [isUpdateFormVisible, setUpdateFormVisible] = useState(false);
 
-    useEffect(() => {
+    const fetchData = useCallback(async () => {
         try {
-            const fetchData = async () => {
-                const response = await fetch(`${backendURL}/student/getStudents`, {
-                    method: "GET",
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    setData(data);
-                }
-            };
-            fetchData();
+            const response = await fetch(`${backendURL}/student/getStudents`);
+            const data = await response.json();
+            if (response.ok) {
+                setData(data);
+            }
         } catch (error) {
             console.log(error.message);
         }
-    }, [formData]);
+    }, []);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     const handleClick = () => {
         setFormVisible(!isFormVisible);
+        setFormData({
+            id: null,
+            name: "",
+            email: "",
+            age: "",
+            marks: null,
+        });
+    };
+
+    const handleUpdate = (id) => {
+        const studentToUpdate = data.find((student) => student._id === id);
+        setFormData({ ...studentToUpdate });
+        setSelectedStudentId(id);
+        setUpdateFormVisible(!isUpdateFormVisible);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setFormVisible(false);
+        setUpdateFormVisible(false);
 
         try {
-            const response = await fetch(`${backendURL}/student/create`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(formData),
-            });
+            let response;
+            if (selectedStudentId) {
+                response = await fetch(`${backendURL}/student/update/${selectedStudentId}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(formData),
+                });
+            } else {
+                response = await fetch(`${backendURL}/student/create`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(formData),
+                });
+            }
+
             if (response.ok) {
                 setFormData({
                     id: null,
@@ -59,6 +84,8 @@ function App() {
                     age: "",
                     marks: null,
                 });
+                setSelectedStudentId(null);
+                fetchData();
             } else {
                 console.log(error.message);
             }
@@ -83,8 +110,7 @@ function App() {
                 method: "DELETE",
             });
             if (response.ok) {
-                const updatedData = data.filter((item) => item._id !== selectedStudentId);
-                setData(updatedData);
+                fetchData();
             }
         } catch (error) {
             console.log(error.message);
@@ -107,6 +133,7 @@ function App() {
                         <th className="border border-gray-500 p-2">Age</th>
                         <th className="border border-gray-500 p-2">Marks</th>
                         <th className="border border-gray-500 p-2">Delete</th>
+                        <th className="border border-gray-500 p-2">Update</th>
                     </tr>
                 </thead>
                 {data.map((item) => (
@@ -122,18 +149,23 @@ function App() {
                                     <MdDelete />
                                 </button>
                             </td>
+                            <td className="border border-gray-500">
+                                <button className="btn btn-danger text-red-600" onClick={() => handleUpdate(item._id)}>
+                                    <FaEdit />
+                                </button>
+                            </td>
                         </tr>
                     </tbody>
                 ))}
             </table>
             <button className="uppercase p-2 bg-green-600 mt-2 rounded-lg text-white" onClick={handleClick}>
-                add new member
+                add student
             </button>
 
-            {isFormVisible && (
+            {(isFormVisible || isUpdateFormVisible) && (
                 <div>
                     <form onSubmit={handleSubmit} className="p-4 bg-white rounded-lg shadow-md mt-4">
-                        <h2 className="text-xl mb-4">Add New Member</h2>
+                        <h2 className="text-xl mb-4"> {isUpdateFormVisible ? "Update" : "Add"} Member</h2>
                         <div className="mb-4">
                             <label className="block text-gray-700 text-sm font-bold mb-2 uppercase" htmlFor="name">
                                 member Name
@@ -143,6 +175,7 @@ function App() {
                                 id="name"
                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 required
+                                value={formData.name}
                                 onChange={handleChange}
                             />
                         </div>
@@ -155,6 +188,7 @@ function App() {
                                 id="email"
                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 required
+                                value={formData.email}
                                 onChange={handleChange}
                             />
                         </div>
@@ -165,8 +199,11 @@ function App() {
                             <input
                                 type="number"
                                 id="age"
-                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                min={1}
+                                max={100}
+                                className="shadow appearance-none border rounded w-full py-                                2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 required
+                                value={formData.age}
                                 onChange={handleChange}
                             />
                         </div>
@@ -177,8 +214,11 @@ function App() {
                             <input
                                 type="number"
                                 id="marks"
+                                min={1}
+                                max={100}
                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 required
+                                value={formData.marks}
                                 onChange={handleChange}
                             />
                         </div>
@@ -189,16 +229,19 @@ function App() {
                             <input
                                 type="number"
                                 id="id"
+                                min={1}
                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 required
+                                value={formData.id}
                                 onChange={handleChange}
                             />
                         </div>
+
                         <button
                             type="submit"
                             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                         >
-                            Add Student
+                            {isUpdateFormVisible ? "Update Student" : "Add Student"}
                         </button>
                     </form>
                 </div>
