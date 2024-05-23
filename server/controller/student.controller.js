@@ -3,15 +3,16 @@ import { errorHandler } from "../utils/error.js";
 
 export const createStudent = async (req, res, next) => {
     try {
-        const { name, email, age, marks } = req.body;
+        const {id, name, email, age, marks } = req.body;
 
-        if (!name || !email || !age || !marks) return next(errorHandler(400, "All fields are required"));
+        if (!id || !name || !email || !age || !marks) return next(errorHandler(400, "All fields are required"));
 
         const existingStudent = await Student.findOne({ email });
 
         if (existingStudent) return next(errorHandler(400, "Student with this email already exists"));
 
         const newStudent = new Student({
+            id,
             name,
             email,
             age,

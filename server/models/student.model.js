@@ -2,6 +2,12 @@ import { Schema, model } from "mongoose";
 
 const studentSchema = new Schema(
     {
+        id:{
+            type: Number,
+            required: true,
+            unique: true,
+        },
+
         name: {
             type: String,
             required: true,
