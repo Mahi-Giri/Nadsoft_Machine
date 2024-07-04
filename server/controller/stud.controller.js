@@ -1,50 +1,36 @@
-import Student from "../models/student.model.js";
+import Stud from "../models/stud.model.js";
 import { errorHandler } from "../utils/error.js";
 
 export const createStudent = async (req, res, next) => {
     try {
-        const {id, name, email, age, marks } = req.body;
+        const { name, subject, mark } = req.body;
 
-        if (!id || !name || !email || !age || !marks) return next(errorHandler(400, "All fields are required"));
+        if (!name || !subject || !mark ) return next(errorHandler(400, "All fields are required"));
 
-        const existingStudent = await Student.findOne({ email });
+        // const existingStudent = await Student.findOne({ email });
+        // console.log(existingStudent);
 
-        if (existingStudent) return next(errorHandler(400, "Student with this email already exists"));
+        // if (existingStudent) return next(errorHandler(400, "Student with this email already exists"));
 
-        const newStudent = new Student({
-            id,
+        const newStudent = new Stud({
             name,
-            email,
-            age,
-            marks,
+            subject,
+            mark,
         });
 
         const savedStudent = await newStudent.save();
 
         res.status(201).json(savedStudent);
     } catch (error) {
+        console.log(error);
         next(error);
     }
 };
 
 export const getStudents = async (req, res, next) => {
     try {
-        const students = await Student.find();
-
+        const students = await Stud.find();
         res.status(200).json(students);
-    } catch (error) {
-        next(error);
-    }
-};
-
-export const getStudent = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const student = await Student.findById(id);
-
-        if (!student) return next(errorHandler(404, "Student not found"));
-
-        res.status(200).json(student);
     } catch (error) {
         next(error);
     }
@@ -56,7 +42,7 @@ export const updateStudent = async (req, res, next) => {
 
         const updateData = req.body;
 
-        const updatedStudent = await Student.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+        const updatedStudent = await Stud.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
 
         if (!updatedStudent) return next(errorHandler(404, "Student not found"));
 
@@ -69,7 +55,7 @@ export const updateStudent = async (req, res, next) => {
 export const deleteStudent = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const deletedStudent = await Student.findByIdAndDelete(id);
+        const deletedStudent = await Stud.findByIdAndDelete(id);
 
         if (!deletedStudent) return next(errorHandler(404, "Student not found"));
 

@@ -1,1 +1,1 @@
-export const DB_NAME = "nadsoft";
+export const DB_NAME = "teacher_portal";

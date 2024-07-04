@@ -16,8 +16,10 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Router
-import studentRoute from "./router/student.router.js";
+import studentRoute from "./router/stud.router.js";
+import userRoute from "./router/user.router.js";
 
+app.use("/api/v1/user", userRoute);
 app.use("/api/v1/student", studentRoute);
 
 app.use((err, req, res, next) => {
